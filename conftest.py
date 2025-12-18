@@ -17,18 +17,26 @@ def courier_data():
 
 @pytest.fixture
 def created_courier(courier_data):
-    # create
+    # create (setup)
     create_resp = CourierApi.create(courier_data)
-    assert create_resp.status_code == 201
+    if create_resp.status_code != 201:
+        raise RuntimeError(
+            f"Courier creation failed in fixture: {create_resp.status_code}, {create_resp.text}"
+        )
 
-    # login
+    # login (to get id for cleanup)
     login_resp = CourierApi.login({
         "login": courier_data["login"],
         "password": courier_data["password"]
     })
+    if login_resp.status_code != 200 or "id" not in login_resp.json():
+        raise RuntimeError(
+            f"Courier login failed in fixture: {login_resp.status_code}, {login_resp.text}"
+        )
+
     courier_id = login_resp.json()["id"]
 
-    yield courier_data | {"id": courier_id}
+    yield {**courier_data, "id": courier_id}
 
     # cleanup
     CourierApi.delete(courier_id)
