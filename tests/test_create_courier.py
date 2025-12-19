@@ -7,10 +7,13 @@ from helpers.courier import CourierApi
 class TestCreateCourier:
 
     @allure.title("Можно создать курьера: 201 и ok=true")
-    def test_create_courier_success(self, courier_data):
+    def test_create_courier_success(self, courier_data, cleanup_courier):
         response = CourierApi.create(courier_data)
+
         assert response.status_code == 201
         assert response.json() == {"ok": True}
+
+        cleanup_courier.update(courier_data)
 
     @allure.title("Нельзя создать двух курьеров с одинаковым логином")
     def test_create_duplicate_courier(self, created_courier):
